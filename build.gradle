@@ -1,19 +1,24 @@
 buildscript {
     repositories {
-        maven { url "https://repo.grails.org/grails/core" }
+        maven { url = 'https://repo.grails.org/grails/core' }
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsGradlePluginVersion"
     }
 }
 
-version projectVersion
-group "org.grails.plugins"
+plugins {
+    id 'com.github.ben-manes.versions' version '0.39.0'
+}
+
+version = projectVersion
+group = 'org.grails.plugins'
 
 apply plugin: 'java-library'
-apply plugin: 'idea'
+apply plugin: 'java-test-fixtures'
 apply plugin: 'org.grails.grails-plugin'
 apply plugin: 'org.grails.internal.grails-plugin-publish'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -28,27 +33,21 @@ configurations {
 
 dependencies {
     api "org.grails:grails-core:$grailsVersion"
-    api "org.gebish:geb-spock:$gebSpock", {
+
+    testFixturesApi "org.gebish:geb-spock:$gebVersion", {
         exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+        exclude group: 'org.seleniumhq.selenium', module: 'selenium-api'
     }
+    testFixturesApi 'org.grails:grails-testing-support:2.6.1'
+    testFixturesApi 'org.grails:grails-datastore-gorm:7.3.4'
+    testFixturesApi "org.testcontainers:selenium:$testcontainersVersion"
+    testFixturesApi "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+    testFixturesApi "org.seleniumhq.selenium:selenium-remote-driver:$seleniumVersion"
+
     documentation "org.codehaus.groovy:groovy:$groovyVersion"
     documentation "org.codehaus.groovy:groovy-ant:$groovyVersion"
     documentation "org.codehaus.groovy:groovy-templates:$groovyVersion"
     documentation "com.github.javaparser:javaparser-core:3.15.14"
-}
-
-findMainClass.enabled = false
-
-bootRun {
-    ignoreExitValue true
-    jvmArgs(
-            '-Dspring.output.ansi.enabled=always',
-            '-noverify',
-            '-XX:TieredStopAtLevel=1',
-            '-Xmx1024m')
-    sourceResources sourceSets.main
-    String springProfilesActive = 'spring.profiles.active'
-    systemProperty springProfilesActive, System.getProperty(springProfilesActive)
 }
 
 
@@ -58,36 +57,34 @@ grailsPublish {
     license {
         name = 'Apache-2.0'
     }
-    title = "Grails Geb Plugin"
-    desc = "Provides Integration with Geb for Functional Testing"
-    developers = [graemerocher: "Graeme Rocher", puneetbehl: "Puneet Behl"]
+    title = 'Grails Geb Plugin'
+    desc = 'Provides Integration with Geb for Functional Testing'
+    developers = [
+        graemerocher: 'Graeme Rocher',
+        puneetbehl: 'Puneet Behl',
+        sbglasius: 'Søren Berg Glasius',
+        matrei: 'Mattias Reichel',
+        jdaugherty: 'James Daugherty'
+    ]
 }
 
-tasks.withType(Groovydoc) {
-    destinationDir = new File(buildDir, 'docs/api')
+tasks.withType(Groovydoc).configureEach {
+    destinationDir = layout.buildDirectory.dir('docs/api').get().asFile
     docTitle = "Grails Geb Plugin ${version}"
     classpath = configurations.documentation
 }
 
-tasks.withType(GroovyCompile) {
-    configure(groovyOptions) {
-        forkOptions.jvmArgs = ['-Xmx1024m']
-    }
-}
-
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
-}
-
-test {
     testLogging {
-        events "passed", "skipped", "failed"
-
+        events 'passed', 'skipped', 'failed'
         showExceptions true
-        exceptionFormat "full"
+        exceptionFormat 'full'
         showCauses true
         showStackTraces true
     }
 }
 
-bootJar.enabled = false
+tasks.named('bootJar') { enabled = false }
+tasks.named('bootRun') { enabled = false }
+tasks.named('findMainClass') { enabled = false }
