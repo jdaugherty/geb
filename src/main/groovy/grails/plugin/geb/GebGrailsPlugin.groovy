@@ -1,4 +1,4 @@
-package geb
+package grails.plugin.geb
 
 import grails.plugins.Plugin
 import grails.plugins.metadata.PluginSource
@@ -13,7 +13,7 @@ class GebGrailsPlugin extends Plugin {
     ]
     def title = "Grails Geb Plugin"
     def author = "Graeme Rocher"
-    def authorEmail = "grocher@pivotal.io"
+    def authorEmail = ""
     def description = '''\
 Plugin that adds Geb functional testing code generation features.
 '''
