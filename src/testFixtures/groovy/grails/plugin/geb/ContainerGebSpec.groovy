@@ -73,7 +73,7 @@ abstract class ContainerGebSpec extends Specification implements ContainerAwareD
     }
 
     /**
-     * The reporter that GebShould use when reporting is enabled.
+     * The reporter that Geb should use when reporting is enabled.
      */
     Reporter createReporter() {
         new CompositeReporter(new PageSourceReporter())
