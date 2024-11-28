@@ -116,7 +116,7 @@ class WebDriverContainerHolder {
 
         ConfigObject configObject = new ConfigObject()
         if (currentConfiguration.reporting) {
-            configObject.reportsDir = grailsGebSettings.getReportingDirectory()
+            configObject.reportsDir = grailsGebSettings.reportingDirectory
             configObject.reporter = (invocation.sharedInstance as ContainerGebSpec).createReporter()
         }
 
@@ -132,7 +132,7 @@ class WebDriverContainerHolder {
         // real url cannot be set (it will be checked as part of the geb test manager startup in reporting mode)
         // set the url to localhost, which the selenium server should respond to (albeit with an error that will be ignored)
 
-        currentBrowser.baseUrl = "http://localhost"
+        currentBrowser.baseUrl = 'http://localhost'
 
         testManager = createTestManager()
 
@@ -167,13 +167,13 @@ class WebDriverContainerHolder {
 
     private static String getHostIp() {
         try {
-            PortForwardingContainer.getDeclaredMethod("getNetwork").with {
+            PortForwardingContainer.getDeclaredMethod('getNetwork').with {
                 accessible = true
                 Optional<ContainerNetwork> network = invoke(PortForwardingContainer.INSTANCE) as Optional<ContainerNetwork>
                 return network.get().ipAddress
             }
         } catch (Exception e) {
-            throw new RuntimeException("Could not access network from PortForwardingContainer", e)
+            throw new RuntimeException('Could not access network from PortForwardingContainer', e)
         }
     }
 

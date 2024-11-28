@@ -37,12 +37,8 @@ class GebRecordingTestListener extends AbstractRunListener {
 
     WebDriverContainerHolder containerHolder
     ErrorInfo errorInfo
-    SpecInfo spec
-    LocalDateTime runDate
 
-    GebRecordingTestListener(WebDriverContainerHolder containerHolder, SpecInfo spec) {
-        this.spec = spec
-        this.runDate = runDate
+    GebRecordingTestListener(WebDriverContainerHolder containerHolder) {
         this.containerHolder = containerHolder
     }
 

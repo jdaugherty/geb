@@ -111,8 +111,7 @@ class GrailsContainerGebExtension implements IGlobalExtension {
             addGebExtensionOnFailureReporter(spec)
 
             GebRecordingTestListener recordingListener = new GebRecordingTestListener(
-                    holder,
-                    spec
+                holder
             )
             spec.addListener(recordingListener)
         }
