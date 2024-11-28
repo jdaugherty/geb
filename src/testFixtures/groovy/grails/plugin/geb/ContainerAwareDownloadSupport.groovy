@@ -15,13 +15,10 @@
  */
 package grails.plugin.geb
 
-import geb.Browser
-import geb.download.DefaultDownloadSupport
 import geb.download.DownloadSupport
 import groovy.transform.CompileStatic
 import groovy.transform.SelfType
-
-import java.util.regex.Pattern
+import spock.lang.Shared
 
 /**
  * A custom implementation of {@link geb.download.DownloadSupport} for enabling the use of its {@code download*()} methods
@@ -42,34 +39,6 @@ import java.util.regex.Pattern
 trait ContainerAwareDownloadSupport implements DownloadSupport {
 
     @Delegate
-    private final DownloadSupport downloadSupport = new LocalhostDownloadSupport(browser, this)
-
-    abstract Browser getBrowser()
-
-    abstract String getHostNameFromHost()
-
-    private static class LocalhostDownloadSupport extends DefaultDownloadSupport {
-
-        private final static Pattern urlPattern = ~/(https?:\/\/)([^\/:]+)(:\d+\/.*)/
-
-        private final ContainerAwareDownloadSupport parent
-        private final Browser browser
-
-        LocalhostDownloadSupport(Browser browser, ContainerAwareDownloadSupport parent) {
-            super(browser)
-            this.browser = browser
-            this.parent = parent
-        }
-
-        @Override
-        HttpURLConnection download(Map options) {
-            return super.download([*: options, base: resolveBase(options)])
-        }
-
-        private String resolveBase(Map options) {
-            return options.base ?: browser.driver.currentUrl.replaceAll(urlPattern) { match, proto, host, rest ->
-                "${proto}${parent.hostNameFromHost}${rest}"
-            }
-        }
-    }
+    @Shared
+    DownloadSupport downloadSupport
 }

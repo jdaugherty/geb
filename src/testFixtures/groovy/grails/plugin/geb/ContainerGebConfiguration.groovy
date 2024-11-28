@@ -15,6 +15,8 @@
  */
 package grails.plugin.geb
 
+import org.testcontainers.containers.GenericContainer
+
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -30,7 +32,7 @@ import java.lang.annotation.Target
 @Retention(RetentionPolicy.RUNTIME)
 @interface ContainerGebConfiguration {
 
-    static final String DEFAULT_HOSTNAME_FROM_CONTAINER = 'host.testcontainers.internal'
+    static final String DEFAULT_HOSTNAME_FROM_CONTAINER = GenericContainer.INTERNAL_HOST_HOSTNAME
     static final String DEFAULT_PROTOCOL = 'http'
 
     /**
@@ -45,4 +47,9 @@ import java.lang.annotation.Target
      * <p>This is useful when the server under test needs to be accessed with a certain hostname.
      */
     String hostName() default DEFAULT_HOSTNAME_FROM_CONTAINER
+
+    /**
+     * Whether reporting should be enabled for this test. Add a `GebConfig.groovy` to customize the reporter configuration.
+     */
+    boolean reporting() default false
 }

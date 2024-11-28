@@ -19,13 +19,9 @@ import groovy.transform.CompileStatic
 import org.spockframework.runtime.model.IterationInfo
 import org.testcontainers.lifecycle.TestDescription
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 /**
  * Implements {@link org.testcontainers.lifecycle.TestDescription} to customize recording names.
  *
- * @see org.testcontainers.lifecycle.TestDescription
  * @author James Daugherty
  * @since 5.0
  */
@@ -35,9 +31,9 @@ class ContainerGebTestDescription implements TestDescription {
     String testId
     String filesystemFriendlyName
 
-    ContainerGebTestDescription(IterationInfo testInfo, LocalDateTime runDate) {
+    ContainerGebTestDescription(IterationInfo testInfo) {
         testId = testInfo.displayName
         String safeName = testId.replaceAll('\\W+', '_')
-        filesystemFriendlyName = "${DateTimeFormatter.ofPattern('yyyyMMdd_HHmmss').format(runDate)}_${safeName}"
+        filesystemFriendlyName = safeName
     }
 }

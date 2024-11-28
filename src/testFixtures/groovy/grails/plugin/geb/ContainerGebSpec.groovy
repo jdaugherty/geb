@@ -15,8 +15,10 @@
  */
 package grails.plugin.geb
 
+import geb.report.CompositeReporter
+import geb.report.PageSourceReporter
+import geb.report.Reporter
 import geb.test.GebTestManager
-import geb.test.ManagedGebTest
 import geb.transform.DynamicallyDispatchesToBrowser
 import org.testcontainers.containers.BrowserWebDriverContainer
 import spock.lang.Shared
@@ -44,21 +46,12 @@ import spock.lang.Specification
  * @since 5.0
  */
 @DynamicallyDispatchesToBrowser
-abstract class ContainerGebSpec extends Specification implements ManagedGebTest, ContainerAwareDownloadSupport {
-
-    private static final String DEFAULT_HOSTNAME_FROM_HOST = 'localhost'
-    boolean reportingEnabled = false
-
-    @Override
-    @Delegate(includes = ['getBrowser', 'report'])
-    GebTestManager getTestManager() {
-        return isReportingEnabled() ?
-                GebTestManagerProvider.getReportingInstance() :
-                GebTestManagerProvider.getInstance()
-    }
+abstract class ContainerGebSpec extends Specification implements ContainerAwareDownloadSupport {
 
     @Shared
-    BrowserWebDriverContainer webDriverContainer
+    @Delegate(includes = ['getBrowser', 'report'])
+    @SuppressWarnings('unused')
+    static GebTestManager testManager
 
     /**
      * Get access to container running the web-driver, for convenience to execInContainer, copyFileToContainer etc.
@@ -68,25 +61,13 @@ abstract class ContainerGebSpec extends Specification implements ManagedGebTest,
      * @see org.testcontainers.containers.ContainerState#copyFileFromContainer(java.lang.String, java.lang.String)
      * @see org.testcontainers.containers.ContainerState
      */
-    BrowserWebDriverContainer getContainer() {
-        return webDriverContainer
-    }
+    @Shared
+    static BrowserWebDriverContainer container
 
     /**
-     * Returns the hostname that the server under test is available on from the host.
-     * <p>This is useful when using any of the {@code download*()} methods as they will connect from the host,
-     * and not from within the container.
-     * <p>Defaults to {@code localhost}. If the value returned by {@code webDriverContainer.getHost()}
-     * is different from the default, this method will return the same value same as {@code webDriverContainer.getHost()}.
-     *
-     * @return the hostname for accessing the server under test from the host
+     * The reporter that GebShould use when reporting is enabled.
      */
-    @Override
-    String getHostNameFromHost() {
-        return hostNameChanged ? webDriverContainer.host : DEFAULT_HOSTNAME_FROM_HOST
-    }
-
-    private boolean isHostNameChanged() {
-        return webDriverContainer.host != ContainerGebConfiguration.DEFAULT_HOSTNAME_FROM_CONTAINER
+    Reporter createReporter() {
+        new CompositeReporter(new PageSourceReporter())
     }
 }

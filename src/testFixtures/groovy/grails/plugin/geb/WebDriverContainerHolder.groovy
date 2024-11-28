@@ -17,8 +17,13 @@ package grails.plugin.geb
 
 import com.github.dockerjava.api.model.ContainerNetwork
 import geb.Browser
+import geb.Configuration
+import geb.spock.SpockGebTestManagerBuilder
+import geb.test.GebTestManager
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
+import groovy.transform.PackageScope
+import groovy.util.logging.Slf4j
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -29,6 +34,7 @@ import org.testcontainers.containers.BrowserWebDriverContainer
 import org.testcontainers.containers.PortForwardingContainer
 
 import java.time.Duration
+import java.util.function.Supplier
 
 /**
  * Responsible for initializing a {@link org.testcontainers.containers.BrowserWebDriverContainer BrowserWebDriverContainer}
@@ -38,15 +44,20 @@ import java.time.Duration
  * @author James Daugherty
  * @since 5.0
  */
+@Slf4j
 @CompileStatic
 class WebDriverContainerHolder {
 
-    RecordingSettings recordingSettings
-    WebDriverContainerConfiguration configuration
-    BrowserWebDriverContainer currentContainer
+    private static final String DEFAULT_HOSTNAME_FROM_HOST = 'localhost'
 
-    WebDriverContainerHolder(RecordingSettings recordingSettings) {
-        this.recordingSettings = recordingSettings
+    GrailsGebSettings grailsGebSettings
+    GebTestManager testManager
+    Browser currentBrowser
+    BrowserWebDriverContainer currentContainer
+    WebDriverContainerConfiguration currentConfiguration
+
+    WebDriverContainerHolder(GrailsGebSettings grailsGebSettings) {
+        this.grailsGebSettings = grailsGebSettings
     }
 
     boolean isInitialized() {
@@ -56,24 +67,26 @@ class WebDriverContainerHolder {
     void stop() {
         currentContainer?.stop()
         currentContainer = null
-        configuration = null
+        currentBrowser = null
+        testManager = null
+        currentConfiguration = null
     }
 
     boolean matchesCurrentContainerConfiguration(WebDriverContainerConfiguration specConfiguration) {
-        specConfiguration == configuration
+        specConfiguration == currentConfiguration
     }
 
     private static int getPort(IMethodInvocation invocation) {
         try {
             return (int) invocation.instance.metaClass.getProperty(invocation.instance, 'serverPort')
-        } catch (Exception ignore) {
+        } catch (ignored) {
             throw new IllegalStateException('Test class must be annotated with @Integration for serverPort to be injected')
         }
     }
 
+    @PackageScope
     boolean reinitialize(IMethodInvocation invocation) {
         WebDriverContainerConfiguration specConfiguration = new WebDriverContainerConfiguration(
-                getPort(invocation),
                 invocation.getSpec()
         )
         if (matchesCurrentContainerConfiguration(specConfiguration)) {
@@ -84,38 +97,72 @@ class WebDriverContainerHolder {
             stop()
         }
 
-        configuration = specConfiguration
+        currentConfiguration = specConfiguration
         currentContainer = new BrowserWebDriverContainer()
-        if (recordingSettings.recordingEnabled) {
+        if (grailsGebSettings.recordingEnabled) {
             currentContainer = currentContainer.withRecordingMode(
-                    recordingSettings.recordingMode,
-                    recordingSettings.recordingDirectory,
-                    recordingSettings.recordingFormat
+                    grailsGebSettings.recordingMode,
+                    grailsGebSettings.recordingDirectory,
+                    grailsGebSettings.recordingFormat
             )
         }
-        Testcontainers.exposeHostPorts(configuration.port)
         currentContainer.tap {
-            addExposedPort(configuration.port)
             withAccessToHost(true)
             start()
         }
         if (hostnameChanged) {
-            currentContainer.execInContainer('/bin/sh', '-c', "echo '$hostIp\t${configuration.hostName}' | sudo tee -a /etc/hosts")
+            currentContainer.execInContainer('/bin/sh', '-c', "echo '$hostIp\t${currentConfiguration.hostName}' | sudo tee -a /etc/hosts")
         }
+
+        ConfigObject configObject = new ConfigObject()
+        if (currentConfiguration.reporting) {
+            configObject.reportsDir = grailsGebSettings.getReportingDirectory()
+            configObject.reporter = (invocation.sharedInstance as ContainerGebSpec).createReporter()
+        }
+
+        currentBrowser = new Browser(new Configuration(configObject, new Properties(), null, null))
 
         WebDriver driver = new RemoteWebDriver(currentContainer.seleniumAddress, new ChromeOptions())
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30))
 
-        // Update the browser to use this container
-        Browser browser = (invocation.sharedInstance as ContainerGebSpec).browser
-        browser.driver = driver
-        browser.baseUrl = "${configuration.protocol}://${configuration.hostName}:${configuration.port}"
+        currentBrowser.driver = driver
+
+        // There's a bit of a chicken and egg problem here: the container & browser are initialized when
+        // the static/shared fields are initialized, which is before the grails server has started so the
+        // real url cannot be set (it will be checked as part of the geb test manager startup in reporting mode)
+        // set the url to localhost, which the selenium server should respond to (albeit with an error that will be ignored)
+
+        currentBrowser.baseUrl = "http://localhost"
+
+        testManager = createTestManager()
 
         return true
     }
 
+    void setupBrowserUrl(IMethodInvocation invocation) {
+        if (!currentBrowser) {
+            return
+        }
+        int port = getPort(invocation)
+        Testcontainers.exposeHostPorts(port)
+
+        currentBrowser.baseUrl = "${currentConfiguration.protocol}://${currentConfiguration.hostName}:${port}"
+    }
+
+    private GebTestManager createTestManager() {
+        new SpockGebTestManagerBuilder()
+                .withReportingEnabled(currentConfiguration.reporting)
+                .withBrowserCreator(new Supplier<Browser>() {
+                    @Override
+                    Browser get() {
+                        currentBrowser
+                    }
+                })
+                .build()
+    }
+
     private boolean getHostnameChanged() {
-        configuration.hostName != ContainerGebConfiguration.DEFAULT_HOSTNAME_FROM_CONTAINER
+        currentConfiguration.hostName != ContainerGebConfiguration.DEFAULT_HOSTNAME_FROM_CONTAINER
     }
 
     private static String getHostIp() {
@@ -130,22 +177,39 @@ class WebDriverContainerHolder {
         }
     }
 
+    /**
+     * Returns the hostname that the server under test is available on from the host.
+     * <p>This is useful when using any of the {@code download*()} methods as they will connect from the host,
+     * and not from within the container.
+     * <p>Defaults to {@code localhost}. If the value returned by {@code webDriverContainer.getHost()}
+     * is different from the default, this method will return the same value same as {@code webDriverContainer.getHost()}.
+     *
+     * @return the hostname for accessing the server under test from the host
+     */
+    String getHostNameFromHost() {
+        return hostNameChanged ? currentContainer.host : DEFAULT_HOSTNAME_FROM_HOST
+    }
+
+    private boolean isHostNameChanged() {
+        return currentContainer.host != ContainerGebConfiguration.DEFAULT_HOSTNAME_FROM_CONTAINER
+    }
+
     @CompileStatic
     @EqualsAndHashCode
     private static class WebDriverContainerConfiguration {
 
         String protocol
         String hostName
-        int port
+        boolean reporting
 
-        WebDriverContainerConfiguration(int port, SpecInfo spec) {
+        WebDriverContainerConfiguration(SpecInfo spec) {
             ContainerGebConfiguration configuration = spec.annotations.find {
                 it.annotationType() == ContainerGebConfiguration
             } as ContainerGebConfiguration
 
             protocol = configuration?.protocol() ?: ContainerGebConfiguration.DEFAULT_PROTOCOL
             hostName = configuration?.hostName() ?: ContainerGebConfiguration.DEFAULT_HOSTNAME_FROM_CONTAINER
-            this.port = port
+            reporting = configuration?.reporting() ?: false
         }
     }
 }
