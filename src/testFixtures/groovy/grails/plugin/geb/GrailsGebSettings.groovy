@@ -19,34 +19,41 @@ import groovy.transform.CompileStatic
 import groovy.transform.Memoized
 import groovy.util.logging.Slf4j
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode
 import static org.testcontainers.containers.VncRecordingContainer.VncRecordingFormat
 
 /**
- * Handles parsing various recording configuration used by {@link grails.plugin.geb.ContainerGebRecordingExtension}
+ * Handles parsing various recording configuration used by {@link GrailsContainerGebExtension}
  *
  * @author James Daugherty
- * @since 5.0
+ * @since 4.1
  */
 @Slf4j
 @CompileStatic
-class RecordingSettings {
+class GrailsGebSettings {
 
     private static VncRecordingMode DEFAULT_RECORDING_MODE = VncRecordingMode.SKIP
     private static VncRecordingFormat DEFAULT_RECORDING_FORMAT = VncRecordingFormat.MP4
 
     String recordingDirectoryName
-	VncRecordingMode recordingMode
-	VncRecordingFormat recordingFormat
+    String reportingDirectoryName
+    VncRecordingMode recordingMode
+    VncRecordingFormat recordingFormat
+    LocalDateTime startTime
 
-    RecordingSettings() {
-        recordingDirectoryName = System.getProperty('grails.geb.recording.directory', 'build/recordings')
+    GrailsGebSettings(LocalDateTime startTime) {
+        recordingDirectoryName = System.getProperty('grails.geb.recording.directory', 'build/gebContainer/recordings')
+        reportingDirectoryName = System.getProperty('grails.geb.reporting.directory', 'build/gebContainer/reports')
         recordingMode = VncRecordingMode.valueOf(
                 System.getProperty('grails.geb.recording.mode', DEFAULT_RECORDING_MODE.name())
         )
         recordingFormat = VncRecordingFormat.valueOf(
                 System.getProperty('grails.geb.recording.format', DEFAULT_RECORDING_FORMAT.name())
         )
+        this.startTime = startTime
     }
 
     boolean isRecordingEnabled() {
@@ -59,7 +66,7 @@ class RecordingSettings {
             return null
         }
 
-        File recordingDirectory = new File(recordingDirectoryName)
+        File recordingDirectory = new File("${recordingDirectoryName}${File.separator}${DateTimeFormatter.ofPattern('yyyyMMdd_HHmmss').format(startTime)}")
         if (!recordingDirectory.exists()) {
             log.info('Could not find `{}` Directory for recording. Creating...', recordingDirectoryName)
             recordingDirectory.mkdirs()
@@ -68,5 +75,22 @@ class RecordingSettings {
         }
 
         return recordingDirectory
+    }
+
+    @Memoized
+    File getReportingDirectory() {
+        if (!reportingDirectoryName) {
+            return null
+        }
+
+        File reportingDirectory = new File("${reportingDirectoryName}${File.separator}${DateTimeFormatter.ofPattern('yyyyMMdd_HHmmss').format(startTime)}")
+        if (!reportingDirectory.exists()) {
+            log.info('Could not find `{}` Directory for reporting. Creating...', reportingDirectoryName)
+            reportingDirectory.mkdirs()
+        } else if (!reportingDirectory.isDirectory()) {
+            throw new IllegalStateException("Configured reporting directory '${reportingDirectory}' is expected to be a directory, but found file instead.")
+        }
+
+        return reportingDirectory
     }
 }

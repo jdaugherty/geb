@@ -53,9 +53,21 @@ This requires a [compatible container runtime](https://java.testcontainers.org/s
 If you choose to use the `ContainerGebSpec` class, as long as you have a compatible container runtime installed, you don't need to do anything else.
 Just run `./gradlew integrationTest` and a container will be started and configured to start a browser that can access your application under test.
 
+#### Parallel Execution
+
+Parallel execution of `ContainerGebSpec` specifications is not currently supported.
+
 #### Custom Host Configuration
 
-The annotation `ContainerGebConfiguration` exists to customize the connection the container will use to access the application under test. The annotation is not required and `ContainerGebSpec` will use the default values in this annotation if it's not present.
+The annotation `ContainerGebConfiguration` exists to customize the connection the container will use to access the application under test. The annotation is not required and `ContainerGebSpec` will use the default values in this annotation if it's not present.  A traditional `GebConfig.groovy` can be provided to configure non-container specific settings.
+
+#### Reporting
+
+To configure reporting, enable it using the `recording` property on the annotation `ContainerGebConfiguration`.  The following system properties exist for reporting configuration:
+
+* `grails.geb.reporting.directory`
+  * purpose: if the test enables reporting, the directory to save the reports relative to the project directory
+  * defaults to `build/gebContainer/reports`
 
 #### Recording
 
@@ -74,7 +86,7 @@ By default, no test recording will be performed.  Various system properties exis
 
 * `grails.geb.recording.directory`
     * purpose: the directory to save the recordings relative to the project directory
-    * defaults to `build/recordings`
+    * defaults to `build/gebContainer/recordings`
 
 
 * `grails.geb.recording.format`
