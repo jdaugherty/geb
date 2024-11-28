@@ -19,7 +19,6 @@ import groovy.transform.CompileStatic
 import groovy.transform.Memoized
 import groovy.util.logging.Slf4j
 
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -30,7 +29,7 @@ import static org.testcontainers.containers.VncRecordingContainer.VncRecordingFo
  * Handles parsing various recording configuration used by {@link GrailsContainerGebExtension}
  *
  * @author James Daugherty
- * @since 5.0
+ * @since 4.1
  */
 @Slf4j
 @CompileStatic

@@ -24,7 +24,7 @@ import java.util.regex.Pattern
 
 /**
  * @author Mattias Reichel
- * @since 5.0
+ * @since 4.1
  */
 @PackageScope
 @CompileStatic

@@ -30,7 +30,7 @@ import java.time.LocalDateTime
  * @see org.testcontainers.containers.BrowserWebDriverContainer#afterTest
  *
  * @author James Daugherty
- * @since 5.0
+ * @since 4.1
  */
 @CompileStatic
 class GebRecordingTestListener extends AbstractRunListener {

@@ -32,7 +32,7 @@ import spock.lang.Shared
  * setups, ensuring the host network context is used for download requests.</p>
  *
  * @author Mattias Reichel
- * @since 5.0
+ * @since 4.1
  */
 @CompileStatic
 @SelfType(ContainerGebSpec)
@@ -40,5 +40,5 @@ trait ContainerAwareDownloadSupport implements DownloadSupport {
 
     @Delegate
     @Shared
-    DownloadSupport downloadSupport
+    static DownloadSupport downloadSupport
 }

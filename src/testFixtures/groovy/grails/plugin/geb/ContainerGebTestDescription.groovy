@@ -23,7 +23,7 @@ import org.testcontainers.lifecycle.TestDescription
  * Implements {@link org.testcontainers.lifecycle.TestDescription} to customize recording names.
  *
  * @author James Daugherty
- * @since 5.0
+ * @since 4.1
  */
 @CompileStatic
 class ContainerGebTestDescription implements TestDescription {
