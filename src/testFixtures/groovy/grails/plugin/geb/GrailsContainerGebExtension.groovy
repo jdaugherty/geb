@@ -35,7 +35,7 @@ import java.time.LocalDateTime
  * as the {@link geb.spock.GebExtension GebExtension} does.
  *
  * @author James Daugherty
- * @since 4.0
+ * @since 4.1
  */
 @Slf4j
 @CompileStatic

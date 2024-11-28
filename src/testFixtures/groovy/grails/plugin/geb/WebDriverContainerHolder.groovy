@@ -42,7 +42,7 @@ import java.util.function.Supplier
  * reuse the same container if the configuration matches the current container.
  *
  * @author James Daugherty
- * @since 4.0
+ * @since 4.1
  */
 @Slf4j
 @CompileStatic

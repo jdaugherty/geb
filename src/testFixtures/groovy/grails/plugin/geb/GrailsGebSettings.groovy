@@ -29,7 +29,7 @@ import static org.testcontainers.containers.VncRecordingContainer.VncRecordingFo
  * Handles parsing various recording configuration used by {@link GrailsContainerGebExtension}
  *
  * @author James Daugherty
- * @since 4.0
+ * @since 4.1
  */
 @Slf4j
 @CompileStatic

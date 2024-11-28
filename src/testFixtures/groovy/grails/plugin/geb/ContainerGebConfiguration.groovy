@@ -26,7 +26,7 @@ import java.lang.annotation.Target
  * Can be used to configure the protocol and hostname that the container's browser will use
  *
  * @author James Daugherty
- * @since 4.0
+ * @since 4.1
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
