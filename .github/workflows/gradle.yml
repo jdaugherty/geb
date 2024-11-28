@@ -26,6 +26,10 @@ jobs:
       - name: "🔨 Build project"
         id: build
         run: ./gradlew build
+      - name: "🏃‍♀️Run functional tests"
+        run: |
+          cd spock-container-test-app
+          ./gradlew check
   publish:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest

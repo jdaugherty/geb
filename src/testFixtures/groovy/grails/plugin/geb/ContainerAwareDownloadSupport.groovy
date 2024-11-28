@@ -40,5 +40,9 @@ trait ContainerAwareDownloadSupport implements DownloadSupport {
 
     @Delegate
     @Shared
-    DownloadSupport downloadSupport
+    static DownloadSupport downloadSupport
+
+    static void setDownloadSupport(DownloadSupport downloadSupport) {
+        this.downloadSupport = downloadSupport
+    }
 }
