@@ -13,7 +13,7 @@ group = 'org.grails.plugins'
 apply plugin: 'java-library'
 apply plugin: 'java-test-fixtures'
 apply plugin: 'org.grails.grails-plugin'
-apply plugin: 'org.grails.grails-plugin-publish'
+apply plugin: 'org.grails.grails-publish'
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 17
