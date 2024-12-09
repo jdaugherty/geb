@@ -32,7 +32,13 @@ class ContainerGebTestDescription implements TestDescription {
     String filesystemFriendlyName
 
     ContainerGebTestDescription(IterationInfo testInfo) {
-        testId = testInfo.displayName
+        testId = [
+                testInfo.feature.spec.displayName,
+                testInfo.feature.displayName,
+                testInfo.displayName != testInfo.feature.displayName ? testInfo.displayName : null,
+                testInfo.displayName != testInfo.feature.displayName ? testInfo.iterationIndex : null
+        ].findAll(/* Remove nulls */).join(' ')
+
         String safeName = testId.replaceAll('\\W+', '_')
         filesystemFriendlyName = safeName
     }
