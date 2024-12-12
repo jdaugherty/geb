@@ -7,6 +7,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'com.github.ben-manes.versions' version '0.51.0'
+}
+
 version = projectVersion
 group = 'org.grails.plugins'
 
@@ -23,15 +27,15 @@ repositories {
     maven { url = 'https://repo.grails.org/grails/core' }
 }
 
-configurations {
-    documentation.extendsFrom compileClasspath
-}
+configurations.register('documentation')
+
+ext.set('selenium.version', seleniumVersion) // Override selenium version from spring-boot-dependencies
 
 dependencies {
 
     implementation(platform("org.grails:grails-bom:$grailsVersion"))
 
-    compileOnly 'org.grails:grails-core' // Provided as this is a Grails plugin
+    compileOnly 'org.grails:grails-core' // Provided, as this is a Grails plugin
 
     testFixturesCompileOnly 'jakarta.servlet:jakarta.servlet-api'
     testFixturesCompileOnly 'org.slf4j:slf4j-simple' // Remove compilation warning about missing slf4j impl
@@ -45,6 +49,7 @@ dependencies {
     documentation 'org.apache.groovy:groovy'
     documentation 'org.apache.groovy:groovy-ant'
     documentation 'org.apache.groovy:groovy-templates'
+    documentation 'org.apache.groovy:groovy-xml'
     documentation 'com.github.javaparser:javaparser-core'
 }
 
@@ -68,6 +73,7 @@ tasks.withType(Groovydoc).configureEach {
     destinationDir = layout.buildDirectory.dir('docs/api').get().asFile
     docTitle = "Grails Geb Plugin ${version}"
     classpath = configurations.documentation
+    source = files(source, sourceSets.testFixtures.allSource)
 }
 
 tasks.withType(Test).configureEach {
