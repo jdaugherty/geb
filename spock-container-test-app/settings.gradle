@@ -1,17 +1,31 @@
+plugins {
+    id 'com.gradle.develocity' version '3.18.2'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.2'
+}
 
-pluginManagement {
-    repositories {
-        mavenLocal()
-        maven { url "https://repo.grails.org/grails/core/" }
-        gradlePluginPortal()
-    }
-    plugins {
-        id "org.grails.grails-web" version "7.0.0-SNAPSHOT"
-        id "org.grails.grails-gsp" version "7.0.0-SNAPSHOT"
+def isCI = System.getenv('CI') != null
+def isLocal = !isCI
+def isAuthenticated = System.getenv('DEVELOCITY_ACCESS_KEY') != null
+
+develocity {
+    server = 'https://ge.grails.org'
+    buildScan {
+        tag('grails')
+        tag('grails/geb')
+        publishing.onlyIf { isAuthenticated }
+        uploadInBackground = isLocal
     }
 }
 
-rootProject.name="spock-container-test-app"
-include 'geb'
+buildCache {
+    local { enabled = isLocal }
+    remote(develocity.buildCache) {
+        push = isCI && isAuthenticated
+        enabled = true
+    }
+}
 
+rootProject.name = 'spock-container-test-app'
+
+include 'geb'
 project(':geb').projectDir = file('..')
