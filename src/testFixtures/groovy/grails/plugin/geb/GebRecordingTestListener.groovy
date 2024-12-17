@@ -19,9 +19,6 @@ import groovy.transform.CompileStatic
 import org.spockframework.runtime.AbstractRunListener
 import org.spockframework.runtime.model.ErrorInfo
 import org.spockframework.runtime.model.IterationInfo
-import org.spockframework.runtime.model.SpecInfo
-
-import java.time.LocalDateTime
 
 /**
  * A test listener that reports the test result to {@link org.testcontainers.containers.BrowserWebDriverContainer} so
