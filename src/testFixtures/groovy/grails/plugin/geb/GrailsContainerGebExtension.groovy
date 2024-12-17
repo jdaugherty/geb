@@ -86,9 +86,11 @@ class GrailsContainerGebExtension implements IGlobalExtension {
                 invocation.proceed()
             }
 
-            spec.addSetupInterceptor {
+            spec.addSetupInterceptor { invocation ->
                 // Grails will be initialized by this point, so setup the browser url correctly
-                holder.setupBrowserUrl(it)
+                holder.setupBrowserUrl(invocation)
+
+                invocation.proceed()
             }
 
             spec.addInterceptor { invocation ->
