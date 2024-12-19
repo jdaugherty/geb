@@ -27,4 +27,4 @@ buildCache {
 
 rootProject.name = 'spock-container-test-app'
 
-includeBuild("..")
+includeBuild('..')
