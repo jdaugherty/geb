@@ -27,5 +27,4 @@ buildCache {
 
 rootProject.name = 'spock-container-test-app'
 
-include 'geb'
-project(':geb').projectDir = file('..')
+includeBuild("..")
